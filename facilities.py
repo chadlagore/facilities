@@ -9,8 +9,7 @@ See `output.csv'.
 import json
 import csv
 
-import scrapy
-from scrapy.crawler import CrawlerProcess
+import requests
 
 
 with open('ids.json') as infile:
@@ -25,7 +24,7 @@ def first(iterator, condition=lambda x: True, default=None):
     return next((x for x in iterator if condition(x)), default)
 
 
-class FacilitiesSpider(scrapy.Spider):
+class FacilitiesSpider:
 
     base_url = 'https://opendata.epa.gov/data/facility/'
     name = 'facilities_spider'
@@ -38,13 +37,11 @@ class FacilitiesSpider(scrapy.Spider):
 
         # Yield each url to parse function.
         for i in ids:
-            yield scrapy.Request(
-                url=self.base_url + i + '.json',
-                callback=self.parse,
-                meta={'id': i}
-            )
+            url = self.base_url + i + '.json'
+            self.parse(requests.get(url), i)
 
-    def parse(self, response):
+
+    def parse(self, response, id):
         '''
         Parses JSON.
 
@@ -53,7 +50,7 @@ class FacilitiesSpider(scrapy.Spider):
         # Collect JSON payload, generate new record.
         payload = json.loads(response.text)
         record = {
-            'id': response.meta['id']
+            'id': id
         }
 
         # Parse JSON payload.
@@ -80,23 +77,18 @@ class FacilitiesSpider(scrapy.Spider):
         '''
 
         # Write new rows to csv.
-        with open('output.csv', 'r+b') as outfile:
-            cols = next(csv.reader(outfile))
+        with open('output.csv', 'r') as rfile:
+            cols = next(csv.reader(rfile))
 
             # Keep recognizable rows.
             record = {
                 key: value for key, value in record.items() if key in cols
             }
 
-            writer = csv.DictWriter(outfile, cols, None)
-            writer.writerow(record)
-
-
-# Identify self - probably edit this.
-process = CrawlerProcess({
-    'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
-})
+            with open('output.csv', 'a') as afile:
+                writer = csv.DictWriter(afile, cols, None)
+                writer.writerow(record)
 
 # Start crawling.
-process.crawl(FacilitiesSpider)
-process.start()
+spider = FacilitiesSpider()
+spider.start_requests()
