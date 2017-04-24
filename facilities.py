@@ -40,7 +40,6 @@ class FacilitiesSpider:
             url = self.base_url + i + '.json'
             self.parse(requests.get(url), i)
 
-
     def parse(self, response, id):
         '''
         Parses JSON.
