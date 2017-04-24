@@ -36,6 +36,7 @@ class FacilitiesSpider(scrapy.Spider):
 
         '''
 
+        # Yield each url to parse function.
         for i in ids:
             yield scrapy.Request(
                 url=self.base_url + i + '.json',
@@ -49,20 +50,27 @@ class FacilitiesSpider(scrapy.Spider):
 
         '''
 
+        # Collect JSON payload, generate new record.
         payload = json.loads(response.text)
         record = {
             'id': response.meta['id']
         }
 
+        # Parse JSON payload.
         for element in payload:
             for key, val in element.items():
+
+                # Columns names are in keys, need to manipulate.
                 column = key.split('#')[-1]
                 if '/' in column:
                     column = key.split('/')[-1]
                 data = first(val)
+
+                # Collect dictionary looking rows.
                 if isinstance(data, dict):
                     record[column] = first(data.values())
 
+        # Send to CSV.
         self.to_csv(record)
 
     def to_csv(self, record):
@@ -71,18 +79,24 @@ class FacilitiesSpider(scrapy.Spider):
 
         '''
 
+        # Write new rows to csv.
         with open('output.csv', 'r+b') as outfile:
             cols = next(csv.reader(outfile))
+
+            # Keep recognizable rows.
             record = {
                 key: value for key, value in record.items() if key in cols
             }
+
             writer = csv.DictWriter(outfile, cols, None)
             writer.writerow(record)
 
 
+# Identify self - probably edit this.
 process = CrawlerProcess({
     'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
 })
 
+# Start crawling.
 process.crawl(FacilitiesSpider)
 process.start()
