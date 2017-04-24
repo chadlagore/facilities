@@ -3,9 +3,9 @@
 ### Getting Started
 
 ```bash
-conda create --name facilities python=3.6 # Create a virtual env if you wish.
-source activate facilities                # Activate it
-pip install -r requirements.text          # Just requests library.
+conda create --name facilities python=3.6       # Create a virtual env if you wish.
+source activate facilities                      # Activate it
+pip install -r requirements.text                # Just requests library at the moment.
 ```
 
 ### Running the Spider
