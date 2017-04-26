@@ -6,8 +6,9 @@ See `output.csv'.
 
 '''
 
-import json
 import csv
+import json
+import time
 
 import requests
 
@@ -28,6 +29,7 @@ class FacilitiesSpider:
 
     base_url = 'https://opendata.epa.gov/data/facility/'
     name = 'facilities_spider'
+    throttle = 3 # Seconds between requests.
 
     def start_requests(self):
         '''
@@ -38,7 +40,10 @@ class FacilitiesSpider:
         # Yield each url to parse function.
         for i in ids:
             url = self.base_url + i + '.json'
+            print("Requesting " + url)
             self.parse(requests.get(url), i)
+            time.sleep(self.throttle)
+
 
     def parse(self, response, id):
         '''
